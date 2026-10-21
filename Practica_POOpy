@@ -1,0 +1,141 @@
+from abc import ABC, abstractmethod
+
+# --- 1. CLASES ABSTRACTAS (Lab 04) ---
+class EntidadNombrada(ABC):
+    """Contrato común para entidades con nombre."""
+    @abstractmethod
+    def resumen(self):
+        pass
+
+class Persona(ABC):
+    """Clase base para estudiantes y docentes."""
+    def __init__(self, dni, nombres, apellidos):
+        self._dni = dni
+        self._nombres = nombres
+        self._apellidos = apellidos
+
+    @property
+    def nombre_completo(self):
+        return f"{self._nombres} {self._apellidos}"
+
+    @abstractmethod
+    def rol(self):
+        pass
+
+# --- 2. HERENCIA Y POLIMORFISMO (Lab 04 y 05) ---
+class Estudiante(Persona):
+    def __init__(self, dni, nombres, apellidos, cod_estudiante, cod_escuela):
+        super().__init__(dni, nombres, apellidos)
+        self._cod_estudiante = cod_estudiante
+        self._cod_escuela = cod_escuela
+
+    def rol(self):
+        return "Estudiante"
+
+class Docente(Persona):
+    def __init__(self, dni, nombres, apellidos, cod_docente):
+        super().__init__(dni, nombres, apellidos)
+        self._cod_docente = cod_docente
+
+    def rol(self):
+        return "Docente"
+
+# --- 3. ENCAPSULAMIENTO Y VALIDACIÓN (Lab 02 y 03) ---
+class Curso(EntidadNombrada):
+    def __init__(self, codigo, nombre, creditos, h_teo=0, h_prac=0):
+        self._codigo = codigo
+        self.nombre = nombre      # Pasa por el setter
+        self.creditos = creditos  # Pasa por el setter
+        self._h_teo = h_teo
+        self._h_prac = h_prac
+
+    @property
+    def nombre(self):
+        return self._nombre
+        
+    @nombre.setter
+    def nombre(self, valor):
+        if not valor or len(valor) > 200:
+            raise ValueError("El nombre no puede estar vacío ni pasar 200 caracteres.")
+        self._nombre = valor
+
+    @property
+    def creditos(self):
+        return self._creditos
+        
+    @creditos.setter
+    def creditos(self, valor):
+        if valor <= 0:
+            raise ValueError("Los créditos deben ser mayores a cero.")
+        self._creditos = valor
+
+    @property
+    def horas_totales(self):
+        return self._h_teo + self._h_prac
+
+    def resumen(self):
+        return f"Curso: {self.nombre} ({self._codigo}) - {self.creditos} cr."
+
+class Seccion:
+    def __init__(self, codigo, vacantes):
+        self._codigo = codigo
+        self._matriculados = 0
+        self.vacantes = vacantes  # Pasa por el setter
+
+    @property
+    def vacantes(self):
+        return self._vacantes
+
+    @vacantes.setter
+    def vacantes(self, valor):
+        if valor <= 0 or valor < self._matriculados:
+            raise ValueError("Vacantes inválidas.")
+        self._vacantes = valor
+
+    @property
+    def matriculados(self):
+        return self._matriculados
+
+    @property
+    def vacantes_disponibles(self):
+        return self._vacantes - self._matriculados
+
+    def matricular(self):
+        if self.vacantes_disponibles > 0:
+            self._matriculados += 1
+        else:
+            raise ValueError("Sección llena.")
+
+class PeriodoAcademico(EntidadNombrada):
+    def __init__(self, nombre, inicio_str, fin_str, estado_int):
+        self._nombre = nombre
+        self._estado = estado_int # 1: planificado, 2: en curso, etc.
+        self.set_fechas(inicio_str, fin_str)
+
+    def set_fechas(self, inicio, fin):
+        # Se usan strings como "YYYY-MM-DD" para poder compararlos con < o >
+        if fin < inicio:
+            raise ValueError("La fecha de fin no puede ser anterior al inicio.")
+        self._fecha_inicio = inicio
+        self._fecha_fin = fin
+
+    def resumen(self):
+        return f"Periodo: {self._nombre} (Estado: {self._estado})"
+
+# --- 4. BLOQUE DE PRUEBA PRINCIPAL ---
+if __name__ == "__main__":
+    # Prueba de encapsulamiento
+    curso1 = Curso("IS-282", "Programación", 4, 2, 2)
+    print(curso1.resumen())
+    
+    # Prueba de métodos modificadores
+    sec1 = Seccion("SEC-A", 30)
+    sec1.matricular()
+    print(f"Vacantes disponibles: {sec1.vacantes_disponibles}")
+    
+    # Prueba de validación y errores
+    try:
+        curso2 = Curso("IS-100", "", -2) # Esto lanzará ValueError
+    except ValueError as e:
+        print(f"Error capturado correctamente: {e}")
+      
